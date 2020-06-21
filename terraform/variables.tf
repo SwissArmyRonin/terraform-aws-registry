@@ -5,15 +5,26 @@ variable "registry_name" {
 }
 
 variable "store_bucket" {
-  description = "The name of the bucket used to store the module binaries. Either this, or `store_bucket_prefix`, must be set, but not both."
+  description = "The name of the bucket used to store the module binaries."
   type        = string
-  default     = null
 }
 
-variable "store_bucket_prefix" {
-  description = "The prefix for the name of the bucket used to store the module binaries. AWS will make a unique name from this. Either this, or `store_bucket`, must be set, but not both."
+variable "lambda_registry_name" {
+  description = "The name of the lambda that handles Terraform registry queries."
   type        = string
-  default     = null
+  default     = "terraform-registry"
+}
+
+variable "lambda_registry_role_name" {
+  description = "The name of the role used to execute the registry lambda."
+  type        = string
+  default     = "terraform-registry-role"
+}
+
+variable "api_name" {
+  description = "The name of the API gateway that fronts the registry."
+  type        = string
+  default     = "terraform-registry"
 }
 
 variable "tags" {

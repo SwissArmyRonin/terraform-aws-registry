@@ -3,16 +3,23 @@ resource "random_pet" "name" {
   prefix = "terraform-registry"
 }
 
+locals {
+  secret             = "supersecret"
+  custom_domain_name = "tf.isntall.net"
+}
+
 module "registry" {
   source = "../.."
 
   registry_name             = random_pet.name.id
   store_bucket              = random_pet.name.id
   api_name                  = random_pet.name.id
-  lambda_webhook_name = format("webhook-%s", random_pet.name.id)
-  lambda_registry_name = format("registry-%s", random_pet.name.id)
-  lambda_webhook_role_name = format("webhook-%s", random_pet.name.id)
+  lambda_webhook_name       = format("webhook-%s", random_pet.name.id)
+  lambda_registry_name      = format("registry-%s", random_pet.name.id)
+  lambda_webhook_role_name  = format("webhook-%s", random_pet.name.id)
   lambda_registry_role_name = format("registry-%s", random_pet.name.id)
+  github_secret             = local.secret
+  custom_domain_name        = local.custom_domain_name
 
   tags = {
     "Environment" = terraform.workspace
@@ -51,16 +58,25 @@ output "example" {
     
       host "registry.io" {
         services = {
-          "modules.v1" = "${module.registry.registry_endpoint}/"
+          "modules.v1" = "${module.registry.endpoint_root}/modules/"
         }
       }
     
     To load the example module, use this:
     
       module "example" {
-          source = "registry.io/swissarmyronin/example/aws"
+          source = "${local.custom_domain_name != null ? local.custom_domain_name : "registry.io"}/swissarmyronin/example/aws"
           version = "~> 1.0"
           prefix = "test"
       }
+
+    Add the following webhook to your GitHub repo:
+
+      Payload URL: ${module.registry.endpoint_root}/webhook
+      Content type: application/json
+      Secret: ${local.secret}
+      SSL verification: enabled
+      Events: "Let me select individual events"
+      ... then deselect everything and select "Releases"
   TEXT
 }

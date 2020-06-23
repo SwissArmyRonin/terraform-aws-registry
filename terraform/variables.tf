@@ -39,7 +39,18 @@ variable "api_name" {
   default     = "terraform-registry"
 }
 
+variable "github_secret" {
+  description = "The secret used by GitHub webhooks"
+  type        = string
+}
+
 variable "tags" {
   description = "A set of tags that should be applied to all resources, if possible"
   type        = map(string)
+}
+
+variable "custom_domain_name" {
+  description = "If a custom domain name is assigned to the API gateway, provide it here"
+  type        = string
+  default     = null
 }

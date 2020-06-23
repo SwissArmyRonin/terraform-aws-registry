@@ -61,7 +61,7 @@ resource "aws_iam_role" "webhook_lambda" {
 }
 
 resource "aws_iam_role_policy_attachment" "webhook_lambda_basic_execution" {
-  role       = aws_iam_role.registry_lambda.name
+  role       = aws_iam_role.webhook_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -81,8 +81,9 @@ resource "aws_lambda_function" "webhook" {
 
   environment {
     variables = {
-      "TABLE"  = aws_dynamodb_table.registry.name
-      "BUCKET" = aws_s3_bucket.registry.id
+      "TABLE"         = aws_dynamodb_table.registry.name
+      "BUCKET"        = aws_s3_bucket.registry.id
+      "GITHUB_SECRET" = var.github_secret
     }
   }
 
@@ -165,6 +166,27 @@ resource "aws_lambda_function" "registry" {
   tags = var.tags
 }
 
+
+#############
+# Discovery #
+#############
+
+locals {
+  endpoint_root = var.custom_domain_name == null ? format("%s/%s", aws_apigatewayv2_api.registry.api_endpoint, aws_apigatewayv2_stage.registry.name) : format("https://%s", var.custom_domain_name)
+}
+
+resource "aws_s3_bucket_object" "discovery_json" {
+  bucket        = aws_s3_bucket.registry.id
+  acl           = "public-read"
+  key           = "terraform.json"
+  storage_class = "REDUCED_REDUNDANCY"
+  content_type  = "application/json"
+  content = jsonencode({
+    "modules.v1" = format("%s/modules/", local.endpoint_root)
+  })
+}
+
+
 ###############
 # API gateway #
 ###############
@@ -176,12 +198,18 @@ resource "aws_apigatewayv2_api" "registry" {
   tags          = merge(var.tags, { "Name" = "Terraform Registry" })
 }
 
-resource "aws_lambda_permission" "lambda_permission" {
-  statement_id  = "AllowMyDemoAPIInvoke"
+resource "aws_lambda_permission" "webhook_lambda_permission" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.webhook.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = format("%s/live/POST/*", aws_apigatewayv2_api.registry.execution_arn)
+}
+
+resource "aws_lambda_permission" "registry_lambda_permission" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.registry.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = format("%s/*/*/*", aws_apigatewayv2_api.registry.execution_arn)
+  source_arn    = format("%s/live/GET/*", aws_apigatewayv2_api.registry.execution_arn)
 }
 
 resource "aws_apigatewayv2_integration" "webhook" {
@@ -190,7 +218,6 @@ resource "aws_apigatewayv2_integration" "webhook" {
   description            = "Webhook Lambda to update the Terraform Registry"
   integration_method     = "POST"
   integration_uri        = aws_lambda_function.webhook.invoke_arn
-  passthrough_behavior   = "WHEN_NO_MATCH" # Marked as changed every time (TF bug?)
   payload_format_version = "2.0"
 }
 
@@ -200,14 +227,21 @@ resource "aws_apigatewayv2_integration" "registry" {
   description            = "Multi-function Lambda to query the Terraform Registry"
   integration_method     = "POST"
   integration_uri        = aws_lambda_function.registry.invoke_arn
-  passthrough_behavior   = "WHEN_NO_MATCH" # Marked as changed every time (TF bug?)
   payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_integration" "discovery" {
+  api_id             = aws_apigatewayv2_api.registry.id
+  integration_type   = "HTTP_PROXY"
+  description        = "Proxy the service discovery document in S3"
+  integration_method = "GET"
+  integration_uri    = format("https://%s.s3.%s.amazonaws.com/%s", aws_s3_bucket.registry.id, aws_s3_bucket.registry.region, aws_s3_bucket_object.discovery_json.key)
 }
 
 resource "aws_apigatewayv2_route" "webhook" {
   api_id         = aws_apigatewayv2_api.registry.id
   operation_name = "RegisterRelease"
-  route_key      = "GET /webhook"
+  route_key      = "POST /webhook"
   target         = format("integrations/%s", aws_apigatewayv2_integration.webhook.id)
 }
 
@@ -240,3 +274,11 @@ resource "aws_apigatewayv2_stage" "registry" {
   auto_deploy = true
   tags        = var.tags
 }
+
+resource "aws_apigatewayv2_route" "discovery" {
+  api_id         = aws_apigatewayv2_api.registry.id
+  operation_name = "Discovery"
+  route_key      = "GET /.wellknown/terraform.json"
+  target         = format("integrations/%s", aws_apigatewayv2_integration.discovery.id)
+}
+

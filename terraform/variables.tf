@@ -9,10 +9,22 @@ variable "store_bucket" {
   type        = string
 }
 
+variable "lambda_webhook_name" {
+  description = "The name of the lambda that handles Terraform registry update."
+  type        = string
+  default     = "terraform-webhook"
+}
+
 variable "lambda_registry_name" {
   description = "The name of the lambda that handles Terraform registry queries."
   type        = string
   default     = "terraform-registry"
+}
+
+variable "lambda_webhook_role_name" {
+  description = "The name of the role used to execute the webhook lambda."
+  type        = string
+  default     = "terraform-webhook-role"
 }
 
 variable "lambda_registry_role_name" {

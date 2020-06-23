@@ -9,8 +9,10 @@ module "registry" {
   registry_name             = random_pet.name.id
   store_bucket              = random_pet.name.id
   api_name                  = random_pet.name.id
-  lambda_registry_name      = random_pet.name.id
-  lambda_registry_role_name = random_pet.name.id
+  lambda_webhook_name = format("webhook-%s", random_pet.name.id)
+  lambda_registry_name = format("registry-%s", random_pet.name.id)
+  lambda_webhook_role_name = format("webhook-%s", random_pet.name.id)
+  lambda_registry_role_name = format("registry-%s", random_pet.name.id)
 
   tags = {
     "Environment" = terraform.workspace
@@ -38,8 +40,8 @@ resource "aws_dynamodb_table_item" "module" {
   range_key  = "Version"
 
   item = jsonencode({
-    "Id" : { "S" : "swissarmyronin/example/aws" },
-    "Version" : { "S" : "1.0.0" }
+    "Id" : { "S" : format("%s/%s/%s", local.namespace, local.name, local.provider) },
+    "Version" : { "S" : local.version }
   })
 }
 

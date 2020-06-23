@@ -14,7 +14,7 @@ Example: Sourcing the latest patch of version 1.0 for the "security-module".
 
 ```terraform
 module "sg" {
-    source = "git@github.com:myorg/security-module?ref=v1.0.2"
+    source = "git@github.com:swissarmyronin/example?ref=v1.0.2"
 	...
 }
 ```
@@ -23,7 +23,7 @@ If the module had been in a Terraform registry, it would be possible to specify 
 
 ```terraform
 module "sg" {
-    source = "private-repo.com/myorg/security-module"
+    source = "registry.io/swissarmyronin/example/aws"
     version = "~> 1.0"
     ...
 }

@@ -37,18 +37,11 @@ resource "aws_s3_bucket" "registry" {
 }
 
 
-################
-# Clone lambda #
-################
+##################
+# Webhook lambda #
+##################
 
-# TODO
-
-
-###################
-# Registry lambda #
-###################
-
-data "aws_iam_policy_document" "registry_lambda" {
+data "aws_iam_policy_document" "lambda" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -58,6 +51,48 @@ data "aws_iam_policy_document" "registry_lambda" {
     }
   }
 }
+
+resource "aws_iam_role" "webhook_lambda" {
+  name                  = var.lambda_webhook_role_name
+  assume_role_policy    = data.aws_iam_policy_document.lambda.json
+  force_detach_policies = true
+  description           = "The role used to execute the webhook lambda"
+  tags                  = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "webhook_lambda_basic_execution" {
+  role       = aws_iam_role.registry_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "archive_file" "webhook" {
+  type        = "zip"
+  source_dir  = format("%s/../lambda/webhook", path.module)
+  output_path = format("%s/lib/webhook.zip", path.module)
+}
+
+resource "aws_lambda_function" "webhook" {
+  filename         = data.archive_file.webhook.output_path
+  function_name    = var.lambda_webhook_name
+  role             = aws_iam_role.webhook_lambda.arn
+  handler          = "index.handler"
+  source_code_hash = data.archive_file.webhook.output_base64sha256
+  runtime          = "nodejs12.x"
+
+  environment {
+    variables = {
+      "TABLE"  = aws_dynamodb_table.registry.name
+      "BUCKET" = aws_s3_bucket.registry.id
+    }
+  }
+
+  tags = var.tags
+}
+
+
+###################
+# Registry lambda #
+###################
 
 data "aws_iam_policy_document" "read_dynamodb" {
   statement {
@@ -85,7 +120,7 @@ resource "aws_iam_policy" "read_s3" {
 
 resource "aws_iam_role" "registry_lambda" {
   name                  = var.lambda_registry_role_name
-  assume_role_policy    = data.aws_iam_policy_document.registry_lambda.json
+  assume_role_policy    = data.aws_iam_policy_document.lambda.json
   force_detach_policies = true
   description           = "The role used to execute the registry lambda"
   tags                  = var.tags
@@ -101,7 +136,7 @@ resource "aws_iam_role_policy_attachment" "read_s3" {
   policy_arn = aws_iam_policy.read_s3.arn
 }
 
-resource "aws_iam_role_policy_attachment" "registry_lambda_basic_excution" {
+resource "aws_iam_role_policy_attachment" "registry_lambda_basic_execution" {
   role       = aws_iam_role.registry_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -127,7 +162,7 @@ resource "aws_lambda_function" "registry" {
     }
   }
 
-  tags = merge(var.tags, { "Name" = "Terraform Registry" })
+  tags = var.tags
 }
 
 ###############
@@ -149,6 +184,16 @@ resource "aws_lambda_permission" "lambda_permission" {
   source_arn    = format("%s/*/*/*", aws_apigatewayv2_api.registry.execution_arn)
 }
 
+resource "aws_apigatewayv2_integration" "webhook" {
+  api_id                 = aws_apigatewayv2_api.registry.id
+  integration_type       = "AWS_PROXY"
+  description            = "Webhook Lambda to update the Terraform Registry"
+  integration_method     = "POST"
+  integration_uri        = aws_lambda_function.webhook.invoke_arn
+  passthrough_behavior   = "WHEN_NO_MATCH" # Marked as changed every time (TF bug?)
+  payload_format_version = "2.0"
+}
+
 resource "aws_apigatewayv2_integration" "registry" {
   api_id                 = aws_apigatewayv2_api.registry.id
   integration_type       = "AWS_PROXY"
@@ -157,6 +202,13 @@ resource "aws_apigatewayv2_integration" "registry" {
   integration_uri        = aws_lambda_function.registry.invoke_arn
   passthrough_behavior   = "WHEN_NO_MATCH" # Marked as changed every time (TF bug?)
   payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "webhook" {
+  api_id         = aws_apigatewayv2_api.registry.id
+  operation_name = "RegisterRelease"
+  route_key      = "GET /webhook"
+  target         = format("integrations/%s", aws_apigatewayv2_integration.webhook.id)
 }
 
 locals {

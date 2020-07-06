@@ -1,0 +1,40 @@
+{
+    "version": "2.0",
+    "routeKey": "POST /webhook",
+    "rawPath": "/live/webhook",
+    "rawQueryString": "",
+    "headers": {
+        "accept": "*/*",
+        "content-length": "5822",
+        "content-type": "application/json",
+        "host": "nz0u9dst4b.execute-api.eu-central-1.amazonaws.com",
+        "user-agent": "GitHub-Hookshot/e509757",
+        "x-amzn-trace-id": "Root=1-5f02d8e3-1ec53328f114c358798ee998",
+        "x-forwarded-for": "140.82.115.150",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https",
+        "x-github-delivery": "2fdcf400-bbac-11ea-99c6-e01d1c2d0025",
+        "x-github-event": "create",
+        "x-hub-signature": "sha1=fac86d102938b618eda09f37e0728809806d7762"
+    },
+    "requestContext": {
+        "accountId": "287985355541",
+        "apiId": "nz0u9dst4b",
+        "domainName": "nz0u9dst4b.execute-api.eu-central-1.amazonaws.com",
+        "domainPrefix": "nz0u9dst4b",
+        "http": {
+            "method": "POST",
+            "path": "/live/webhook",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "140.82.115.150",
+            "userAgent": "GitHub-Hookshot/e509757"
+        },
+        "requestId": "PPbTfjBlliAEMvQ=",
+        "routeKey": "POST /webhook",
+        "stage": "live",
+        "time": "06/Jul/2020:07:55:15 +0000",
+        "timeEpoch": 1594022115036
+    },
+    "body": "{\"ref\":\"v1.0.0\",\"ref_type\":\"tag\",\"master_branch\":\"master\",\"description\":\"Solution\",\"pusher_type\":\"user\",\"repository\":{\"id\":236317856,\"node_id\":\"MDEwOlJlcG9zaXRvcnkyMzYzMTc4NTY=\",\"name\":\"mhrd\",\"full_name\":\"mhvelplund/mhrd\",\"private\":false,\"owner\":{\"login\":\"mhvelplund\",\"id\":10400769,\"node_id\":\"MDQ6VXNlcjEwNDAwNzY5\",\"avatar_url\":\"https://avatars3.githubusercontent.com/u/10400769?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/mhvelplund\",\"html_url\":\"https://github.com/mhvelplund\",\"followers_url\":\"https://api.github.com/users/mhvelplund/followers\",\"following_url\":\"https://api.github.com/users/mhvelplund/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/mhvelplund/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/mhvelplund/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/mhvelplund/subscriptions\",\"organizations_url\":\"https://api.github.com/users/mhvelplund/orgs\",\"repos_url\":\"https://api.github.com/users/mhvelplund/repos\",\"events_url\":\"https://api.github.com/users/mhvelplund/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/mhvelplund/received_events\",\"type\":\"User\",\"site_admin\":false},\"html_url\":\"https://github.com/mhvelplund/mhrd\",\"description\":\"Solution\",\"fork\":false,\"url\":\"https://api.github.com/repos/mhvelplund/mhrd\",\"forks_url\":\"https://api.github.com/repos/mhvelplund/mhrd/forks\",\"keys_url\":\"https://api.github.com/repos/mhvelplund/mhrd/keys{/key_id}\",\"collaborators_url\":\"https://api.github.com/repos/mhvelplund/mhrd/collaborators{/collaborator}\",\"teams_url\":\"https://api.github.com/repos/mhvelplund/mhrd/teams\",\"hooks_url\":\"https://api.github.com/repos/mhvelplund/mhrd/hooks\",\"issue_events_url\":\"https://api.github.com/repos/mhvelplund/mhrd/issues/events{/number}\",\"events_url\":\"https://api.github.com/repos/mhvelplund/mhrd/events\",\"assignees_url\":\"https://api.github.com/repos/mhvelplund/mhrd/assignees{/user}\",\"branches_url\":\"https://api.github.com/repos/mhvelplund/mhrd/branches{/branch}\",\"tags_url\":\"https://api.github.com/repos/mhvelplund/mhrd/tags\",\"blobs_url\":\"https://api.github.com/repos/mhvelplund/mhrd/git/blobs{/sha}\",\"git_tags_url\":\"https://api.github.com/repos/mhvelplund/mhrd/git/tags{/sha}\",\"git_refs_url\":\"https://api.github.com/repos/mhvelplund/mhrd/git/refs{/sha}\",\"trees_url\":\"https://api.github.com/repos/mhvelplund/mhrd/git/trees{/sha}\",\"statuses_url\":\"https://api.github.com/repos/mhvelplund/mhrd/statuses/{sha}\",\"languages_url\":\"https://api.github.com/repos/mhvelplund/mhrd/languages\",\"stargazers_url\":\"https://api.github.com/repos/mhvelplund/mhrd/stargazers\",\"contributors_url\":\"https://api.github.com/repos/mhvelplund/mhrd/contributors\",\"subscribers_url\":\"https://api.github.com/repos/mhvelplund/mhrd/subscribers\",\"subscription_url\":\"https://api.github.com/repos/mhvelplund/mhrd/subscription\",\"commits_url\":\"https://api.github.com/repos/mhvelplund/mhrd/commits{/sha}\",\"git_commits_url\":\"https://api.github.com/repos/mhvelplund/mhrd/git/commits{/sha}\",\"comments_url\":\"https://api.github.com/repos/mhvelplund/mhrd/comments{/number}\",\"issue_comment_url\":\"https://api.github.com/repos/mhvelplund/mhrd/issues/comments{/number}\",\"contents_url\":\"https://api.github.com/repos/mhvelplund/mhrd/contents/{+path}\",\"compare_url\":\"https://api.github.com/repos/mhvelplund/mhrd/compare/{base}...{head}\",\"merges_url\":\"https://api.github.com/repos/mhvelplund/mhrd/merges\",\"archive_url\":\"https://api.github.com/repos/mhvelplund/mhrd/{archive_format}{/ref}\",\"downloads_url\":\"https://api.github.com/repos/mhvelplund/mhrd/downloads\",\"issues_url\":\"https://api.github.com/repos/mhvelplund/mhrd/issues{/number}\",\"pulls_url\":\"https://api.github.com/repos/mhvelplund/mhrd/pulls{/number}\",\"milestones_url\":\"https://api.github.com/repos/mhvelplund/mhrd/milestones{/number}\",\"notifications_url\":\"https://api.github.com/repos/mhvelplund/mhrd/notifications{?since,all,participating}\",\"labels_url\":\"https://api.github.com/repos/mhvelplund/mhrd/labels{/name}\",\"releases_url\":\"https://api.github.com/repos/mhvelplund/mhrd/releases{/id}\",\"deployments_url\":\"https://api.github.com/repos/mhvelplund/mhrd/deployments\",\"created_at\":\"2020-01-26T13:45:01Z\",\"updated_at\":\"2020-01-26T13:58:32Z\",\"pushed_at\":\"2020-07-01T15:04:40Z\",\"git_url\":\"git://github.com/mhvelplund/mhrd.git\",\"ssh_url\":\"git@github.com:mhvelplund/mhrd.git\",\"clone_url\":\"https://github.com/mhvelplund/mhrd.git\",\"svn_url\":\"https://github.com/mhvelplund/mhrd\",\"homepage\":null,\"size\":14,\"stargazers_count\":0,\"watchers_count\":0,\"language\":\"Java\",\"has_issues\":true,\"has_projects\":true,\"has_downloads\":true,\"has_wiki\":true,\"has_pages\":false,\"forks_count\":0,\"mirror_url\":null,\"archived\":false,\"disabled\":false,\"open_issues_count\":0,\"license\":{\"key\":\"mit\",\"name\":\"MIT License\",\"spdx_id\":\"MIT\",\"url\":\"https://api.github.com/licenses/mit\",\"node_id\":\"MDc6TGljZW5zZTEz\"},\"forks\":0,\"open_issues\":0,\"watchers\":0,\"default_branch\":\"master\"},\"sender\":{\"login\":\"mhvelplund\",\"id\":10400769,\"node_id\":\"MDQ6VXNlcjEwNDAwNzY5\",\"avatar_url\":\"https://avatars3.githubusercontent.com/u/10400769?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/mhvelplund\",\"html_url\":\"https://github.com/mhvelplund\",\"followers_url\":\"https://api.github.com/users/mhvelplund/followers\",\"following_url\":\"https://api.github.com/users/mhvelplund/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/mhvelplund/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/mhvelplund/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/mhvelplund/subscriptions\",\"organizations_url\":\"https://api.github.com/users/mhvelplund/orgs\",\"repos_url\":\"https://api.github.com/users/mhvelplund/repos\",\"events_url\":\"https://api.github.com/users/mhvelplund/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/mhvelplund/received_events\",\"type\":\"User\",\"site_admin\":false}}",
+    "isBase64Encoded": false
+}

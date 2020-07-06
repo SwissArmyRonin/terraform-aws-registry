@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const AWS = require('aws-sdk');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
+const download = require("download-git-repo");
 
 //const dynamo = new AWS.DynamoDB.DocumentClient();
 //const s3 = new AWS.S3();
@@ -43,7 +44,7 @@ exports.handler = async (event, context) => {
             err.statusCode = 401;
             throw err;
         }
-        
+
         const request = JSON.parse(event.body);
 
         // Process request
@@ -56,11 +57,18 @@ exports.handler = async (event, context) => {
         const clone_url = request.repository.clone_url
         const ref = request.ref;
 
-        const { stdout, stderr } = await exec(`. ${process.env.LAMBDA_TASK_ROOT}/mirror.sh "${clone_url}" "${ref}"`);
-        console.log('stdout:', stdout);
-        console.log('stderr:', stderr);
+        const git = util.promisify(download)
+        const result = await git("blinkist/terraform-aws-airship-ecs-service#0.9.9.3", "/tmp/checkout", {})
 
-        body = "OK";
+        // let git = (url) => {
+        //     return new Promise((resolve, reject) => {
+        //         download("blinkist/terraform-aws-airship-ecs-service#0.9.9.3", "tmp", {}, function (err) {
+        //             err ? reject(err) : resolve("OK");
+        //         });
+        //     });
+        // };
+
+        body = "OK " + result;
     } catch (err) {
         if (process.env.DEBUG) {
             console.log(err.toString(), err.stack);

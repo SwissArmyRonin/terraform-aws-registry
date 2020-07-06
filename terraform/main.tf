@@ -78,6 +78,7 @@ resource "aws_lambda_function" "webhook" {
   handler          = "index.handler"
   source_code_hash = data.archive_file.webhook.output_base64sha256
   runtime          = "nodejs12.x"
+  timeout = 300 # 5 mins, 900 seconds is max
 
   environment {
     variables = {

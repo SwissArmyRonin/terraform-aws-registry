@@ -1,11 +1,9 @@
-const crypto = require('crypto');
-const AWS = require('aws-sdk');
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-const download = require("download-git-repo");
+//const util = require('util');
+// const AWS = require('aws-sdk');
+// const dynamo = new AWS.DynamoDB.DocumentClient();
+// const s3 = new AWS.S3();
 
-//const dynamo = new AWS.DynamoDB.DocumentClient();
-//const s3 = new AWS.S3();
+const {git} = require("./src/webhook")
 
 /**
  * Terraform registry implementation.
@@ -21,30 +19,8 @@ exports.handler = async (event, context) => {
     let body;
     let statusCode = '200';
 
-    const headers = {
-        'Content-Type': 'application/json',
-    };
-
     try {
-        // Validate HMAC header
-        const xHubSignature = event.headers['x-hub-signature'];
-        let expected;
-        try {
-            expected = "sha1=" + crypto.createHmac('sha1', process.env.GITHUB_SECRET).update(event.body).digest('hex');
-        } catch (err) {
-            expected = "ERROR"; // This causes a signature validation error below
-        }
-
-        if (xHubSignature != expected) {
-            if (process.env.DEBUG) {
-                console.log('xHubSignature', xHubSignature);
-                console.log('expected', expected);
-            }
-            const err = new Error("Invalid signature header");
-            err.statusCode = 401;
-            throw err;
-        }
-
+        validateHmac(event.headers, event.body);
         const request = JSON.parse(event.body);
 
         // Process request
@@ -54,21 +30,12 @@ exports.handler = async (event, context) => {
             throw err;
         }
 
-        const clone_url = request.repository.clone_url
+        const full_name = request.repository.full_name
         const ref = request.ref;
 
-        const git = util.promisify(download)
-        const result = await git("blinkist/terraform-aws-airship-ecs-service#0.9.9.3", "/tmp/checkout", {})
+        await git(full_name, ref); // TODO: add username/password
 
-        // let git = (url) => {
-        //     return new Promise((resolve, reject) => {
-        //         download("blinkist/terraform-aws-airship-ecs-service#0.9.9.3", "tmp", {}, function (err) {
-        //             err ? reject(err) : resolve("OK");
-        //         });
-        //     });
-        // };
-
-        body = "OK " + result;
+        body = "OK";
     } catch (err) {
         if (process.env.DEBUG) {
             console.log(err.toString(), err.stack);
@@ -77,5 +44,33 @@ exports.handler = async (event, context) => {
         statusCode = err.statusCode || 500;
     }
 
+    const headers = { 'Content-Type': 'application/json' };
+
     return { statusCode, body, headers };
 };
+
+/**
+ * Validate HMAC header.
+ * 
+ * @param {*} headers 
+ * @param {*} body 
+ */
+function validateHmac(headers, body) {
+    const xHubSignature = headers['x-hub-signature'];
+    let expected;
+    try {
+        expected = "sha1=" + require('crypto').createHmac('sha1', process.env.GITHUB_SECRET).update(body).digest('hex');
+    } catch (err) {
+        expected = "ERROR"; // This causes a signature validation error below
+    }
+
+    if (xHubSignature != expected) {
+        if (process.env.DEBUG) {
+            console.log('xHubSignature', xHubSignature);
+            console.log('expected', expected);
+        }
+        const err = new Error("Invalid signature header");
+        err.statusCode = 401;
+        throw err;
+    }
+}

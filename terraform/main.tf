@@ -65,10 +65,19 @@ resource "aws_iam_role_policy_attachment" "webhook_lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "null_resource" "npm_install" {
+  provisioner "local-exec" {
+    command = "rm -rf node_modules && npm install --only=prod"
+    working_dir = format("%s/../lambda/webhook", path.module)
+  }
+}
+
+
 data "archive_file" "webhook" {
   type        = "zip"
   source_dir  = format("%s/../lambda/webhook", path.module)
   output_path = format("%s/lib/webhook.zip", path.module)
+  depends_on = [ null_resource.npm_install ]
 }
 
 resource "aws_lambda_function" "webhook" {

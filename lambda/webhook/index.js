@@ -1,9 +1,12 @@
-//const util = require('util');
-// const AWS = require('aws-sdk');
-// const dynamo = new AWS.DynamoDB.DocumentClient();
-// const s3 = new AWS.S3();
+const AWS = require('aws-sdk');
+const dynamo = new AWS.DynamoDB.DocumentClient();
+const s3 = new AWS.S3();
 
-const {git} = require("./src/webhook")
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+const fsPromises = fs.promises;
+const { git, zip, validateHmac } = require("./src/webhook");
 
 /**
  * Terraform registry implementation.
@@ -30,10 +33,39 @@ exports.handler = async (event, context) => {
             throw err;
         }
 
-        const full_name = request.repository.full_name
+        const full_name = request.repository.full_name;
         const ref = request.ref;
 
-        await git(full_name, ref); // TODO: add username/password
+        const tempDir = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'checkout-'));
+        await git(full_name, ref, tempDir); // TODO: add username/password
+        const zipFile = await zip(tempDir);
+
+        // Upload the zip file to S3
+        const data = fs.readFileSync(zipFile);
+        let version = ref.replace(/^[^0-9]*/, '');
+        if (version.length == 0) {
+            version = '0.0.0';
+        }
+        const s3Key = `${full_name}/aws/${version}.zip`;
+
+        await s3.putObject({
+            Body: Buffer.from(data, 'binary'),
+            Bucket: process.env.BUCKET,
+            Key: s3Key
+        }).promise();
+
+        if (process.env.DEBUG) {
+            console.log(`Zip file uploaded: ${zipFile} -> ${process.env.BUCKET}/${s3Key}`);
+        }
+
+        // Update dynamo registry
+        await dynamo.put({
+            TableName: process.env.TABLE,
+            Item: {
+                Id: `${full_name}/aws`,
+                Version: version
+            }
+        }).promise();
 
         body = "OK";
     } catch (err) {
@@ -48,29 +80,3 @@ exports.handler = async (event, context) => {
 
     return { statusCode, body, headers };
 };
-
-/**
- * Validate HMAC header.
- * 
- * @param {*} headers 
- * @param {*} body 
- */
-function validateHmac(headers, body) {
-    const xHubSignature = headers['x-hub-signature'];
-    let expected;
-    try {
-        expected = "sha1=" + require('crypto').createHmac('sha1', process.env.GITHUB_SECRET).update(body).digest('hex');
-    } catch (err) {
-        expected = "ERROR"; // This causes a signature validation error below
-    }
-
-    if (xHubSignature != expected) {
-        if (process.env.DEBUG) {
-            console.log('xHubSignature', xHubSignature);
-            console.log('expected', expected);
-        }
-        const err = new Error("Invalid signature header");
-        err.statusCode = 401;
-        throw err;
-    }
-}

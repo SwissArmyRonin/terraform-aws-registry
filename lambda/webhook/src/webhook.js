@@ -1,6 +1,6 @@
-const { clone } = require("isomorphic-git")
+const { clone } = require("isomorphic-git");
 const fs = require('fs');
-const http = require('isomorphic-git/http/node')
+const http = require('isomorphic-git/http/node');
 const ignore = require('ignore');
 const JSZip = require("jszip");
 
@@ -55,29 +55,55 @@ exports.zip = async (dir) => {
   fs.writeFileSync(zipName, data);
 
   return zipName;
-}
+};
 
 /** Recursively scan folders, adding unfiltered files to the final zip. */
 async function zipRecursive(dir, basedir, filter, zip) {
   const dirPath = basedir + '/' + dir;
-  const files = fs.readdirSync(dirPath)
+  const files = fs.readdirSync(dirPath);
 
   await asyncForEach(files, async (file) => {
     if (!filter.ignores(dir + file)) {
       if (fs.statSync(dirPath + '/' + file).isDirectory()) {
-        await zipRecursive(dir ? dir + '/' + file : file, basedir, filter, zip)
+        await zipRecursive(dir ? dir + '/' + file : file, basedir, filter, zip);
       } else {
-        zipFileName = `${dir}${dir ? '/' : ''}${file}`
-        realFileName = `${dirPath}${dir ? '/' : ''}${file}`
+        const zipFileName = `${dir}${dir ? '/' : ''}${file}`;
+        const realFileName = `${dirPath}${dir ? '/' : ''}${file}`;
         zip.file(zipFileName, fs.createReadStream(realFileName));
       }
     }
-  })
+  });
 }
 
 /** Loop though promises, waiting for each one. */
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
+  }
+}
+
+/**
+ * Validate HMAC header.
+ * 
+ * @param {*} headers 
+ * @param {*} body 
+ */
+exports.validateHmac = (headers, body) => {
+  const xHubSignature = headers['x-hub-signature'];
+  let expected;
+  try {
+      expected = "sha1=" + require('crypto').createHmac('sha1', process.env.GITHUB_SECRET).update(body).digest('hex');
+  } catch (err) {
+      expected = "ERROR"; // This causes a signature validation error below
+  }
+
+  if (xHubSignature != expected) {
+      if (process.env.DEBUG) {
+          console.log('xHubSignature', xHubSignature);
+          console.log('expected', expected);
+      }
+      const err = new Error("Invalid signature header");
+      err.statusCode = 401;
+      throw err;
   }
 }

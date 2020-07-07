@@ -1,13 +1,11 @@
 const { git } = require('../src/webhook.js');
 const util = require('util');
 const rimraf = util.promisify(require('rimraf'));
-const mkdirp = require('mkdirp');
 const tmpDirectory = '/tmp/checkout';
 const dotenv = require('dotenv');
 
 before(async () => {
     dotenv.config();
-    await mkdirp(tmpDirectory);
 })
 
 describe('Git repo operations', () => {

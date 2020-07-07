@@ -2,8 +2,7 @@ const { clone } = require("isomorphic-git")
 const fs = require('fs');
 const http = require('isomorphic-git/http/node')
 const ignore = require('ignore');
-const util = require('util');
-const rimraf = util.promisify(require('rimraf'));
+const JSZip = require("jszip");
 
 /**
  * Clone a repo.
@@ -28,50 +27,57 @@ exports.git = async (repo, ref, dir, username, password) => clone({
 
 
 /**
- * Remove ignored files.
+ * Zip the checkout folder, minus the ignored files.
  * 
  * @param {string} dir the checkout directory. Defaults to `/tmp/checkout`
+ * @return {string} the path of the output zip file
  */
-exports.removeIgnored = async (dir) => {
+exports.zip = async (dir) => {
   const filename = dir + '/.tfignore';
+  const filter = ignore();
 
-  if (!fs.existsSync(filename)) return;
+  if (fs.existsSync(filename)) {
+    filter.add(fs.readFileSync(filename).toString());
+  }
 
-  const filter = ignore().add(fs.readFileSync(filename).toString());
   filter.add('.git*');
   filter.add('.tfignore');
-  await recursivelyRemoveIgnored('', dir, filter);
+
+  const zip = new JSZip();
+  await zipRecursive('', dir, filter, zip);
+  const data = await zip.generateAsync({
+    type: 'uint8array',
+    compression: 'DEFLATE',
+    platform: process.platform
+  });
+
+  const zipName = dir + '/output.zip';
+  fs.writeFileSync(zipName, data);
+
+  return zipName;
 }
 
-/**
- * Recursively scan a directory for ignored files, and remove them.
- * 
- * @param {string} dir the directory to filter
- * @param {*} filter an instance of `ignore`
- */
-async function recursivelyRemoveIgnored(dir, basedir, filter) {
+/** Recursively scan folders, adding unfiltered files to the final zip. */
+async function zipRecursive(dir, basedir, filter, zip) {
   const dirPath = basedir + '/' + dir;
   const files = fs.readdirSync(dirPath)
 
   await asyncForEach(files, async (file) => {
-    if (filter.ignores(dir + file)) {
-      await rimraf(`${dirPath}${file}`);
-    } else if (fs.statSync(dirPath + '/' + file).isDirectory()) {
-      await recursivelyRemoveIgnored(dir ? dir + '/' + file : file, basedir, filter)
+    if (!filter.ignores(dir + file)) {
+      if (fs.statSync(dirPath + '/' + file).isDirectory()) {
+        await zipRecursive(dir ? dir + '/' + file : file, basedir, filter, zip)
+      } else {
+        zipFileName = `${dir}${dir ? '/' : ''}${file}`
+        realFileName = `${dirPath}${dir ? '/' : ''}${file}`
+        zip.file(zipFileName, fs.createReadStream(realFileName));
+      }
     }
   })
 }
 
+/** Loop though promises, waiting for each one. */
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
 }
-
-
-/**
- * Zip the checkout folder.
- * 
- * @param {string} dir the checkout directory. Defaults to `/tmp/checkout`
- */
-exports.zip = async (dir) => { }

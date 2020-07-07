@@ -52,6 +52,30 @@ data "aws_iam_policy_document" "lambda" {
   }
 }
 
+data "aws_iam_policy_document" "write_dynamodb" {
+  statement {
+    actions   = ["dynamodb:PutItem"]
+    resources = [aws_dynamodb_table.registry.arn]
+  }
+}
+
+data "aws_iam_policy_document" "write_s3" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = [format("%s*", aws_s3_bucket.registry.arn)]
+  }
+}
+
+resource "aws_iam_policy" "write_s3" {
+  name   = format("s3-write-%s", var.store_bucket)
+  policy = data.aws_iam_policy_document.write_s3.json
+}
+
+resource "aws_iam_policy" "write_dynamodb" {
+  name   = format("dynamodb-write-%s", var.registry_name)
+  policy = data.aws_iam_policy_document.write_dynamodb.json
+}
+
 resource "aws_iam_role" "webhook_lambda" {
   name                  = var.lambda_webhook_role_name
   assume_role_policy    = data.aws_iam_policy_document.lambda.json
@@ -60,15 +84,33 @@ resource "aws_iam_role" "webhook_lambda" {
   tags                  = var.tags
 }
 
+resource "aws_iam_role_policy_attachment" "write_dynamodb" {
+  role       = aws_iam_role.webhook_lambda.name
+  policy_arn = aws_iam_policy.write_dynamodb.arn
+}
+
+resource "aws_iam_role_policy_attachment" "write_s3" {
+  role       = aws_iam_role.webhook_lambda.name
+  policy_arn = aws_iam_policy.write_s3.arn
+}
+
 resource "aws_iam_role_policy_attachment" "webhook_lambda_basic_execution" {
   role       = aws_iam_role.webhook_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "null_resource" "npm_install" {
+  provisioner "local-exec" {
+    command = "rm -rf node_modules && npm install --only=prod"
+    working_dir = format("%s/../lambda/webhook", path.module)
+  }
 }
 
 data "archive_file" "webhook" {
   type        = "zip"
   source_dir  = format("%s/../lambda/webhook", path.module)
   output_path = format("%s/lib/webhook.zip", path.module)
+  depends_on = [ null_resource.npm_install ]
 }
 
 resource "aws_lambda_function" "webhook" {

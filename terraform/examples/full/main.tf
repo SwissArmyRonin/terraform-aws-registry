@@ -19,7 +19,7 @@ module "registry" {
   lambda_webhook_role_name  = format("webhook-%s", random_pet.name.id)
   lambda_registry_role_name = format("registry-%s", random_pet.name.id)
   github_secret             = local.secret
-  custom_domain_name        = local.custom_domain_name
+  # custom_domain_name        = local.custom_domain_name
 
   tags = {
     "Environment" = terraform.workspace

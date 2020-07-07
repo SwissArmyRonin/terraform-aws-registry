@@ -4,12 +4,18 @@
   "description": "Lambda receiver for GitHub webhooks",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "keywords": [],
   "author": "Mads Hvelplund <mads@swissarmyronin.dk>",
   "license": "MIT",
   "dependencies": {
-    "download-git-repo": "^3.0.2"
+    "isomorphic-git": "^1.7.0",
+    "jszip": "^3.5.0"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0",
+    "mocha": "^8.0.1",
+    "rimraf": "^3.0.2"
   }
 }

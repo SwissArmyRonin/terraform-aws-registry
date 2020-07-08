@@ -1,5 +1,7 @@
 # Serverless Private Terraform Registry
 
+This module creates a Terraform registry. 
+
 Using the code in the project, it is possible to deploy a serverless Terraform module registry in AWS, backed by GitHub.
 
 ## Why do you need this
@@ -64,3 +66,7 @@ To support other back-ends than Git, it would be simple to add additional Clone 
 ### Graphical user-interface
 
 It would be nice to have a simple UI interface  for the repository similar to Terraform's public registry, where the input and output variables, along with a README file could be stored.
+
+### Support the whole Terraform registry API
+
+Currently on the registry part is finished, but the example shows how to populate and use the registry as is.

@@ -102,13 +102,13 @@ resource "aws_iam_role_policy_attachment" "webhook_lambda_basic_execution" {
 resource "null_resource" "npm_install" {
   provisioner "local-exec" {
     command = "rm -rf node_modules && npm install --only=prod"
-    working_dir = format("%s/../lambda/webhook", path.module)
+    working_dir = format("%s/lambda/webhook", path.module)
   }
 }
 
 data "archive_file" "webhook" {
   type        = "zip"
-  source_dir  = format("%s/../lambda/webhook", path.module)
+  source_dir  = format("%s/lambda/webhook", path.module)
   output_path = format("%s/lib/webhook.zip", path.module)
   depends_on = [ null_resource.npm_install ]
 }
@@ -187,7 +187,7 @@ resource "aws_iam_role_policy_attachment" "registry_lambda_basic_execution" {
 
 data "archive_file" "registry" {
   type        = "zip"
-  source_dir  = format("%s/../lambda/registry", path.module)
+  source_dir  = format("%s/lambda/registry", path.module)
   output_path = format("%s/lib/registry.zip", path.module)
 }
 

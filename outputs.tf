@@ -10,5 +10,5 @@ output "registry_name" {
 
 output "endpoint_root" {
   description = "The root address of registry endpoints"
-  value       = local.endpoint_root
+  value       = module.api-gateway.endpoint_root
 }

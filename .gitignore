@@ -1,5 +1,6 @@
 .env
 .terraform/
+*.zip
+node_modules/
 terraform.tfstate
 terraform.tfstate.backup
-lib/

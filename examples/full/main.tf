@@ -5,7 +5,7 @@ resource "random_pet" "name" {
 
 locals {
   secret             = "supersecret"
-  custom_domain_name = "tf.isntall.net"
+  custom_domain_name = null 
 }
 
 module "registry" {
@@ -19,7 +19,7 @@ module "registry" {
   lambda_webhook_role_name  = format("webhook-%s", random_pet.name.id)
   lambda_registry_role_name = format("registry-%s", random_pet.name.id)
   github_secret             = local.secret
-  # custom_domain_name        = local.custom_domain_name
+  custom_domain_name        = local.custom_domain_name
 
   tags = {
     "Environment" = terraform.workspace
@@ -34,10 +34,16 @@ locals {
   version   = "1.0.0"
 }
 
+data "archive_file" "webhook" {
+  type        = "zip"
+  source_dir  = format("%s/sample", path.module)
+  output_path = format("%s/sample.zip", path.module)
+}
+
 resource "aws_s3_bucket_object" "module" {
   bucket        = module.registry.store_bucket_id
   key           = format("%s/%s/%s/%s.zip", local.namespace, local.name, local.provider, local.version)
-  source        = format("%s/terraform-aws-example-1.0.zip", path.module)
+  source        = data.archive_file.webhook.output_path
   storage_class = "REDUCED_REDUNDANCY"
 }
 

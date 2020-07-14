@@ -1,1 +1,1 @@
-prefix="bucket-test"
+prefix = "bucket-test"

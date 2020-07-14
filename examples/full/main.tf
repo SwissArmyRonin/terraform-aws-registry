@@ -5,7 +5,7 @@ resource "random_pet" "name" {
 
 locals {
   secret             = "supersecret"
-  custom_domain_name = null 
+  custom_domain_name = var.custom_domain_name
 }
 
 module "registry" {
@@ -20,6 +20,7 @@ module "registry" {
   lambda_registry_role_name = format("registry-%s", random_pet.name.id)
   github_secret             = local.secret
   custom_domain_name        = local.custom_domain_name
+  access_tokens             = var.access_tokens
 
   tags = {
     "Environment" = terraform.workspace
@@ -83,6 +84,6 @@ output "example" {
       Secret: ${local.secret}
       SSL verification: enabled
       Events: "Let me select individual events"
-      ... then deselect everything and select "Releases"
+      ... then deselect everything and select "Branch or tag creation"
   TEXT
 }

@@ -1,0 +1,88 @@
+openapi: '3.0.1'
+info:
+  title: 'import'
+  description: 'Import existing GitHub repositories into the registry.'
+  version: '1.0.0'
+  schemes:
+    - 'https'
+paths:
+  '/import/{organization}/{repository}/{ref}':
+    post:
+      x-amazon-apigateway-integration:
+        credentials: '${role_arn}'
+        uri: '${invoke_arn}'
+        responses:
+          default:
+            statusCode: '200'
+        passthroughBehavior: 'when_no_match'
+        httpMethod: 'POST'
+        contentHandling: 'CONVERT_TO_TEXT'
+        type: 'aws_proxy'
+      parameters:
+        - $ref: '#/components/parameters/organization'
+        - $ref: '#/components/parameters/repository'
+        - $ref: '#/components/parameters/ref'
+      responses:
+        200:
+          $ref: '#/components/responses/import_success'
+  '/import/{organization}/{repository}':
+    post:
+      x-amazon-apigateway-integration:
+        credentials: '${role_arn}'
+        uri: '${invoke_arn}'
+        responses:
+          default:
+            statusCode: '200'
+        passthroughBehavior: 'when_no_match'
+        httpMethod: 'POST'
+        contentHandling: 'CONVERT_TO_TEXT'
+        type: 'aws_proxy'
+      parameters:
+        - $ref: '#/components/parameters/organization'
+        - $ref: '#/components/parameters/repository'
+      responses:
+        200:
+          $ref: '#/components/responses/import_success'
+components:
+  schemas:
+    ImportResult:
+      type: 'object'
+      description: 'An object describing which versions were imported.'
+      properties:
+        modulepath:
+          type: 'string'
+          description: 'The source path to use when importing the module'
+        versions:
+          type: 'array'
+          description: 'A list of versions that were imported from GitHub'
+          items:
+            type: 'string'
+  parameters:
+    organization:
+      name: 'organization'
+      description: 'Either a GitHub username or organization'
+      in: 'path'
+      required: true
+      schema:
+        type: 'string'
+    repository:
+      name: 'repository'
+      description: 'A GitHub repository name'
+      in: 'path'
+      required: true
+      schema:
+        type: 'string'
+    ref:
+      name: 'ref'
+      description: 'A Git tag- or branch name'
+      in: 'path'
+      required: true
+      schema:
+        type: 'string'
+  responses:
+    import_success:
+      description: 'An object describing the import results.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImportResult'

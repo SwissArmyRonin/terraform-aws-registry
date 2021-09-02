@@ -10,7 +10,7 @@
   "author": "Mads Hvelplund <mads@swissarmyronin.dk>",
   "license": "MIT",
   "dependencies": {
-    "isomorphic-git": "^1.7.0",
+    "isomorphic-git": "^1.8.2",
     "jszip": "^3.5.0",
     "y18n": ">=4.0.1"
   },

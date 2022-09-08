@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "isomorphic-git": "^1.7.0",
-    "jszip": "^3.5.0",
+    "jszip": "^3.7.0",
     "y18n": ">=4.0.1"
   },
   "devDependencies": {
